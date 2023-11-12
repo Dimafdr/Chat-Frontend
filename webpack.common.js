@@ -11,7 +11,7 @@ function addHash(fileName, buildMode, hash = 'contenthash') {
 module.exports = (buildMode) => ({
   entry: './src/index.js',
   output: {
-    path: path.resolve('..', 'AHJ-hw.-8-SSE-WS.-1-Chat-Backend', 'public'),
+    path: path.resolve('..', 'Chat-Backend', 'public'),
     // path: path.resolve(__dirname, 'dist'),
     filename: addHash('[name].js', buildMode),
   },
