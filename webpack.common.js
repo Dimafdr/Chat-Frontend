@@ -2,28 +2,28 @@ const path = require('path');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-// Хеширование файлов только в production mode
-function addHash(fileName, buildMode, hash = 'contenthash') {
-  return buildMode === 'production' ? fileName.replace(/\.[^.]+$/, `.[${hash}]$&`) : fileName;
-}
-
-module.exports = (buildMode) => ({
-  entry: './src/index.js',
+module.exports = {
+  target: 'web',
   output: {
-    path: path.resolve('..', 'Chat-Backend', 'public'),
-    // path: path.resolve(__dirname, 'dist'),
-    filename: addHash('[name].js', buildMode),
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: '',
   },
   module: {
     rules: [
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: ['babel-loader'],
+        use: {
+          loader: 'babel-loader',
+        },
       },
       {
         test: /\.html$/,
-        use: ['html-loader'],
+        use: [
+          {
+            loader: 'html-loader',
+          },
+        ],
       },
       {
         test: /\.css$/,
@@ -32,13 +32,13 @@ module.exports = (buildMode) => ({
         ],
       },
       {
-        test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
-        loader: 'file-loader',
-        options: {
-          name: '[name].[ext]',
-        },
+        test: /\.svg$/,
+        type: 'asset/resource',
       },
     ],
+  },
+  devServer: {
+    port: 9000,
   },
   plugins: [
     new HtmlWebPackPlugin({
@@ -46,8 +46,8 @@ module.exports = (buildMode) => ({
       filename: './index.html',
     }),
     new MiniCssExtractPlugin({
-      filename: addHash('[name].css', buildMode),
-      chunkFilename: addHash('[id].css', buildMode),
+      filename: '[name].css',
+      chunkFilename: '[id].css',
     }),
   ],
-});
+};
