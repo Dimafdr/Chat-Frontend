@@ -1,5 +1,4 @@
 /* eslint-disable max-len */
-import nanoid from 'nano-id';
 import chatHTML from '../html/chat.html';
 import UsersList from './UsersList';
 import BtnLoginLogout from './BtnLoginLogout';
