@@ -1,353 +1,192 @@
-/* eslint-disable max-len */
-import nanoid from 'nano-id';
-import chatHTML from '../html/chat.html';
-import UsersList from './UsersList';
-import BtnLoginLogout from './BtnLoginLogout';
-import ModalLogin from './ModalLogin';
-import createMessageEl from './createMessageEl';
-import HiddenTempEl from './utility';
-import InteractiveEl from './InteractiveEl';
-import ModalLogout from './ModalLogout';
-import ModalHelp from './ModalHelp';
-
+/* eslint-disable class-methods-use-this */
+/* eslint-disable no-console */
 export default class Chat {
-  constructor(links) {
-    this.els = {
-      chat: null,
-      parentUsersList: null,
-      messagesList: null,
-      btns: {
-        loginLogout: null,
-        send: null,
-        help: null,
-      },
-      input: null,
-    };
+  constructor(element) {
+    if (typeof element === 'string') {
+      this.popup = document.querySelector(element);
+    }
+    this.popup = element;
+    this.popupForm = document.forms.nickname;
+    this.chatForm = document.forms.chat;
+    this.popupInput = this.popupForm.elements.name;
+    this.chatInput = this.chatForm.elements.message;
+    this.user = null;
+    this.ws = null;
+    this.baseURL = 'wss://ahj-8-1-sse-ws-sergius.herokuapp.com/';
+    this.listUsers = document.querySelector('.users__list');
+    this.listMessages = document.querySelector('.messages__list');
 
-    this.selectors = {
-      chat: '[data-widget="chat"]',
-      parentUsersList: '[data-parent="users-list"]',
-      messagesList: '[data-chat="messages-list"]',
-      btns: {
-        loginLogout: '[data-action="login-logout"]',
-        send: '[data-action="send"]',
-        help: '[data-action="help"]',
-      },
-      input: '[data-chat="input"]',
-    };
-
-    // Общие данные для чата и встраемыех сущностей (entities)
-    this.data = {
-      // Имя, с которым пользователь подключился в чат.
-      userName: null,
-
-      // Текущее количество подключенных пользователей.
-      usersCount: 0,
-
-      // id последнего сообщения отправленного пользователем.
-      // Так как собственное сообщение мы не выдаем в чат напрямую, а получаем от сервера
-      // как все остальные пользователи, то что бы отобразить его особым образом, можно определить
-      // свое сообщение с помощью lastMsgId.
-      lastMsgId: null,
-    };
-
-    // entities
-    this.ents = {
-      btnLoginLogout: null,
-      btnSend: null,
-      input: null, // textarea для ввода сообщения.
-      usersList: new UsersList(this.data),
-      ws: null,
-    };
-
-    this.modals = {
-      login: null,
-      logout: null,
-      help: null,
-    };
-
-    this.links = links;
+    this.onMessage = this.onMessage.bind(this);
+    this.onPopupSubmit = this.onPopupSubmit.bind(this);
+    this.onChatSubmit = this.onChatSubmit.bind(this);
   }
 
-  async init(parentEl) {
-    let htEl = new HiddenTempEl(chatHTML).el;
-
-    this.els.chat = document.querySelector(this.selectors.chat);
-
-    this.els.btns.loginLogout = this.els.chat.querySelector(this.selectors.btns.loginLogout);
-    this.els.btns.loginLogout.addEventListener('click', this.onBtnLoginLogoutClick.bind(this));
-    this.ents.btnLoginLogout = new BtnLoginLogout(this.els.btns.loginLogout);
-    this.ents.btnLoginLogout.disable();
-
-    this.els.parentUsersList = this.els.chat.querySelector(this.selectors.parentUsersList);
-    this.ents.usersList.init(this.els.parentUsersList);
-
-    this.els.messagesList = this.els.chat.querySelector(this.selectors.messagesList);
-
-    this.els.btns.send = this.els.chat.querySelector(this.selectors.btns.send);
-    this.els.btns.send.addEventListener('click', this.onBtnSendClick.bind(this));
-    this.ents.btnSend = new InteractiveEl(this.els.btns.send);
-    this.ents.btnSend.disable();
-
-    this.els.btns.help = this.els.chat.querySelector(this.selectors.btns.help);
-    this.els.btns.help.addEventListener('click', this.onBtnHelpClick.bind(this));
-
-    this.els.input = this.els.chat.querySelector(this.selectors.input);
-    this.els.input.addEventListener('input', this.onMessageInput.bind(this));
-    this.els.input.addEventListener('keydown', this.onMessageKeyDown.bind(this));
-    this.els.input.addEventListener('keyup', this.onMessageKeyUp.bind(this));
-    this.ents.input = new InteractiveEl(this.els.input);
-    this.ents.input.disable();
-
-    parentEl.append(this.els.chat);
-    htEl.remove();
-    htEl = null;
-
-    this.modals.help = new ModalHelp();
-
-    this.modals.login = new ModalLogin();
-    this.modals.login.show();
-    this.modals.logout = new ModalLogout();
-
-    const result = await this.activateModalLogin();
-
-    // eslint-disable-next-line consistent-return
-    return result.data;
+  init() {
+    this.popupForm.addEventListener('submit', this.onPopupSubmit);
+    this.chatForm.addEventListener('submit', this.onChatSubmit);
+    this.popupInput.focus();
   }
 
-  async activateModalLogin() {
-    this.modals.login.show();
-    const result = await this.getUserName();
+  onPopupSubmit(evt) {
+    evt.preventDefault();
+    if (this.popupInput.validity.valid) {
+      this.popupInput.className = 'popup__input';
+      this.popupInput.placeholder = 'Введите псевдоним';
+      this.user = this.popupInput.value;
+      console.log(this.user);
+      this.ws = new WebSocket(this.baseURL);
+      this.ws.binaryType = 'blob';
 
-    if (!result.success) return result;
-    this.modals.login.hide();
-    this.data.userName = result.data.userName;
-    this.ents.usersList.show(result.data);
-    this.ents.btnLoginLogout.setLogoutStatus();
-    this.ents.input.enable();
-    this.els.input.focus();
+      this.ws.addEventListener('open', () => {
+        const data = JSON.stringify({ type: 'registration', name: this.user });
+        this.ws.send(data);
+        console.log('connected');
+      });
 
-    this.createWsConnection();
+      this.ws.addEventListener('close', (e) => {
+        console.log('connection closed', e);
+      });
 
-    return result;
-  }
+      this.ws.addEventListener('error', (e) => {
+        console.log('error:', e);
+      });
 
-  /* Рекурсивная функция. (Как реализовать получение и проверку имени без рекурсии пока придумать не удалось)
-     1. Ожидает от пользователя ввода имени.
-     2. Если пользователь нажал 'Esc' (modal-login закрылось), то делает кнопку login кликабельной
-        и возвращает результат.
-     3. Получив имя, проверяет свободно ли оно с помощью checkUserName().
-     4. Если имя занято, сообщает об этом пользователю и запускает саму себя, алгоритм возвращается на пункт 1.
-     5. Если имя свободно, записывает результат проверки и возвращает его.
-     6. Если имя прошло проверку с первого раза т.е. рекурсивного запуска не было, то результат возвращается
-        во внешний метод activateModalLogin(). Если были рекурсивные запуски, то результат будет возвращатся
-        в саму себя на предыдущий уровень вложенности, пока не дойдет до самого первого и не вернет во внешний метод. */
-  async getUserName() {
-    const result = {
-      success: true,
-      data: '',
-    };
-
-    const formData = await this.modals.login.getData();
-
-    // Если окно входа было закрыто с помощью 'Esc', то активируем кнопку login и выходим.
-    if (!formData) {
-      this.ents.btnLoginLogout.enable();
-      this.modals.login.firstEl.value = '';
-      this.modals.login.hideErrMsg();
-      result.success = false;
-      result.data = 'Modal-login was closed with the \'Esc\' key.';
+      this.ws.addEventListener('message', this.onMessage);
     } else {
-      const checkNameResult = await this.checkUserName(formData);
-
-      if (!checkNameResult.success) {
-        this.modals.login.showErrMsg();
-        this.modals.login.firstEl.focus();
-        const recursionResult = await this.getUserName();
-        result.success = recursionResult.success; // Для случая, когда нажали 'Esc'.
-        result.data = recursionResult.data;
-      } else {
-        result.data = checkNameResult.data;
-      }
-    }
-
-    return result;
-  }
-
-  // Отправляет на сервер полученное имя от пользователя.
-  // Если имя свободно сервер возвращает это имя и список подключенных пользователей.
-  async checkUserName(formData) {
-    const userName = formData.get('name');
-    // Послать запрос на сервер с проверкой, свободно ли введенное имя.
-    const response = await fetch(this.links.login, {
-      method: 'POST',
-      body: userName,
-    });
-
-    const result = await response.json();
-    return result;
-  }
-
-  createWsConnection() {
-    this.ents.ws = new WebSocket(this.links.ws);
-
-    this.ents.ws.addEventListener('open', () => {
-      this.ents.ws.send(JSON.stringify({
-        type: 'connected',
-        userName: this.data.userName,
-      }));
-    });
-
-    this.ents.ws.addEventListener('message', (event) => {
-      const message = JSON.parse(event.data);
-
-      switch (message.type) {
-        case 'connected':
-          // Подключился новый пользователь. Обновляем список пользователей.
-          this.ents.usersList.show(message);
-          if (this.data.usersCount > 1 && this.els.input.value !== '') {
-            if (this.modals.help.isOpen) this.ents.btnSend.isDisabledBefore = false;
-            else this.ents.btnSend.enable();
-          }
-          break;
-        case 'disconnected':
-          // Какой-то пользователь отключился. Обновляем список пользователей.
-          this.ents.usersList.show(message);
-          if (this.data.usersCount === 1) {
-            if (this.modals.help.isOpen) this.ents.btnSend.isDisabledBefore = true;
-            else this.ents.btnSend.disable();
-          }
-          break;
-        case 'message':
-          if (message.id === this.data.lastMsgId) {
-            message.isMyMessage = true;
-          }
-          break;
-        default: throw Error(`Unknown message type ${message.type}`);
-      }
-
-      this.showMessage(message);
-    });
-
-    this.ents.ws.addEventListener('close', (event) => {
-      if (event.wasClean) {
-        this.showMessage({
-          type: 'disconnected',
-          userName: this.data.userName,
-        });
-      } else {
-        this.showMessage({
-          type: 'connectionError',
-          userName: this.data.userName,
-        });
-        this.setChatStateToDisconnected();
-      }
-    });
-
-    this.ents.ws.addEventListener('error', (event) => {
-      // eslint-disable-next-line no-console
-      console.log('error', event);
-    });
-  }
-
-  async onBtnLoginLogoutClick() {
-    if (this.ents.btnLoginLogout.isDisabled === true) return;
-    if (this.ents.btnLoginLogout.status === 'login') {
-      this.ents.btnLoginLogout.disable();
-
-      // eslint-disable-next-line no-unused-vars
-      await this.activateModalLogin();
-    } else if (this.ents.btnLoginLogout.status === 'logout') {
-      this.modals.logout.show();
-      const result = await this.modals.logout.getData();
-
-      if (!result) return;
-      this.setChatStateToDisconnected();
-      this.ents.ws.close();
+      this.changePlaceholder('Заполните пожалуйста это поле');
     }
   }
 
-  // При разлогинивании (пользователь вышел сам или произошел разрыв сосединения) переводит состояние
-  // интерактивных элементов чата в соответсвующее состояние.
-  setChatStateToDisconnected() {
-    this.ents.btnLoginLogout.setLoginStatus();
-    this.ents.btnSend.disable();
-    this.ents.input.disable();
-    this.ents.usersList.clear();
-    this.data.usersCount = 0;
-  }
-
-  showMessage(message) {
-    const messageEl = createMessageEl(message);
-    this.els.messagesList.append(messageEl);
-    messageEl.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  onMessageInput() {
-    if (this.data.usersCount < 2 || this.els.input.value === '') {
-      this.ents.btnSend.disable();
-    } else this.ents.btnSend.enable();
-  }
-
-  // событие 'keydown' срабатывает повторно при удерживании клавиш.
-  onMessageKeyDown(event) {
-    // Отменяем для нажатия 'Enter' действие по умолчанию - переход на новую строку.
-    if (event.key === 'Enter') {
-      event.preventDefault();
-    }
-
-    if ((event.key === 'Enter' && event.altKey) || (event.key === 'Enter' && event.shiftKey)) {
-      // Enter + Alt (в отличии от Enter + Shift) не переходит на новую строку по умолчанию,
-      // поэтому вручную добавляем '\n'. В случае нажатия Enter + Shift не будет перехода сразу на две строки
-      // так как уже убрано действие по умолчанию в условии выше (event.key === 'Enter').
-      this.els.input.value += '\n';
-    }
-  }
-
-  // событие 'keyup' не срабатывает повторно при удерживании клавиш.
-  onMessageKeyUp(event) {
-    // Если 'Enter' нажат без Shift или Alt, значит это отправка сообщения.
-    if ((event.key === 'Enter' && !event.altKey) && (event.key === 'Enter' && !event.shiftKey)) {
-      this.onBtnSendClick();
-    }
-  }
-
-  onBtnSendClick() {
-    if (this.ents.btnSend.isDisabled) return;
-    if (!this.ents.ws) return;
-    if (this.ents.ws.readyState === WebSocket.OPEN) {
-      this.data.lastMsgId = nanoid();
-      const message = {
-        id: this.data.lastMsgId,
+  onChatSubmit(evt) {
+    evt.preventDefault();
+    if (this.chatInput.value !== '') {
+      const data = JSON.stringify({
         type: 'message',
-        userName: this.data.userName,
-        text: this.els.input.value,
-      };
-
-      this.ents.ws.send(JSON.stringify(message));
-      this.els.input.value = '';
-      this.els.input.focus();
+        content: this.chatInput.value,
+        name: this.user,
+      });
+      this.ws.send(data);
+      this.chatInput.value = '';
+      console.log('Сообщение отправлено');
     }
   }
 
-  // Нажатие на кнопку 'help' показывает либо закрывает окно 'modal-help'.
-  async onBtnHelpClick() {
-    if (this.modals.help.isOpen) this.modals.help.close();
-    else {
-      this.modals.help.show();
-
-      // Запрещаем пользователю взаимодействие с другими элементами, пока он не закроет окно 'modal-help'.
-      this.ents.btnLoginLogout.disable();
-      this.ents.btnSend.disable();
-      this.ents.input.disable();
-
-      // Ожидаем закрытия 'modal-help'.
-      await this.modals.help.getData();
-
-      // Вернуть интерактивные элементы в их прежние состояния после закрытия модального окна 'help'.
-      this.ents.btnLoginLogout.changeToPrevState();
-      this.ents.btnSend.changeToPrevState();
-      this.ents.input.changeToPrevState();
+  onMessage(e) {
+    const data = JSON.parse(e.data);
+    if (data.type === 'registration') {
+      if (data.success) {
+        this.popupInput.value = '';
+        this.hidePopup();
+        this.chatInput.focus();
+        this.drawListUsers(data.activeUsers);
+        this.drawListMessages(data.messages);
+      } else if (!data.error) {
+        this.changePlaceholder('Это имя уже занято');
+      } else {
+        this.changePlaceholder('Ошибка сервера');
+        console.log(data.error);
+      }
     }
+    if (data.type === 'message') {
+      if (data.success) {
+        this.drawListMessages(data.messages);
+      } else {
+        this.showError();
+        console.log(data.error);
+      }
+    }
+    if (data.type === 'update') {
+      if (data.success) {
+        this.drawListUsers(data.activeUsers);
+      } else {
+        this.showError();
+        console.log(data.error);
+      }
+    }
+  }
+
+  showError() {
+    this.listMessages.insertAdjacentHTML('beforeend', `<div class="error">
+       <div class="error__body">
+         <div class="error__content">Ошибка сервера</div>
+       </div>
+     </div>`);
+    setTimeout(() => {
+      this.hideError();
+    }, 3000);
+  }
+
+  hideError() {
+    document.querySelector('.error').remove();
+  }
+
+  markUpUser(name) {
+    let temp;
+    if (name === this.user) {
+      temp = 'mine';
+    } else {
+      temp = '';
+    }
+    return `<li class="users__item ${temp}">
+              <div class="users__avatar"></div>
+              <div class="users__name">${name}</div>
+            </li>`;
+  }
+
+  markUpMessage(name, date, message) {
+    let temp;
+    if (name === this.user) {
+      temp = 'mine';
+    } else {
+      temp = '';
+    }
+    return `<li class="messages__item message ${temp}">
+    <div class="message__wrapper">
+      <div class="message__title">
+        <span class="message__name">${name}</span>
+        <span class="message__data">${this.cleanDate(date)}</span>
+      </div>
+      <div class="message__content">
+        ${message}
+      </div>
+    </div>
+  </li>`;
+  }
+
+  cleanDate(str) {
+    const temp1 = str.split(' ');
+    this.date = [temp1[1], temp1[0].slice(0, -1)].join(' ');
+    return this.date;
+  }
+
+  changePlaceholder(text) {
+    this.popupInput.className = 'popup__input';
+    this.popupInput.value = '';
+    this.popupInput.placeholder = text;
+    this.popupInput.classList.add('red');
+  }
+
+  drawListMessages(data) {
+    if (data.length > 0) {
+      this.listMessages.innerHTML = '';
+      data.forEach((e) => {
+        this.listMessages.insertAdjacentHTML(
+          'beforeend', this.markUpMessage(e.name, e.created, e.message),
+        );
+      });
+    }
+  }
+
+  drawListUsers(activeUsers) {
+    if (activeUsers.length > 0) {
+      this.listUsers.innerHTML = '';
+      activeUsers.forEach((e) => {
+        this.listUsers.insertAdjacentHTML('beforeend', this.markUpUser(e));
+      });
+    }
+  }
+
+  hidePopup() {
+    this.popup.className = 'popup visually_hidden';
   }
 }
