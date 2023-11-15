@@ -1,4 +1,5 @@
 /* eslint-disable max-len */
+import nanoid from 'nano-id';
 import chatHTML from '../html/chat.html';
 import UsersList from './UsersList';
 import BtnLoginLogout from './BtnLoginLogout';
@@ -315,7 +316,7 @@ export default class Chat {
     if (this.ents.btnSend.isDisabled) return;
     if (!this.ents.ws) return;
     if (this.ents.ws.readyState === WebSocket.OPEN) {
-      this.data.lastMsgId = nanoid();
+      this.data.lastMsgId = nanoid;
       const message = {
         id: this.data.lastMsgId,
         type: 'message',
