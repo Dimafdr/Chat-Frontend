@@ -1,5 +1,33 @@
-import Chat from './Chat';
+/* eslint-disable no-console */
+import ChatDOM from './ChatDOM';
+import ChatControl from './ChatControl';
+import ChatWS from './ChatWS';
+import ChatAPI from './ChatAPI';
 
-const chat = new Chat(document.querySelector('.popup'));
+/* домен сервера */
+const domainUrl = 'ahj-hw8-1.onrender.com';
+// const domainUrl = 'localhost:7070';
 
-chat.init();
+/* элемент блока div в DOM */
+const hw = document.querySelector('#hw');
+
+/*
+*  создание класса отвечающего за DOM
+*  и присвоение ему div элемента
+*/
+const chatDOM = new ChatDOM();
+chatDOM.bindToDOM(hw);
+
+/*
+*  создание классов отвечающих за вебсокет и за API
+*/
+const chatWS = new ChatWS(domainUrl);
+const chatAPI = new ChatAPI(domainUrl);
+
+/*
+* создание класса отвечающего за контрольт и инициализация класса
+*/
+const chatControl = new ChatControl(chatDOM, chatWS, chatAPI);
+chatControl.init();
+
+console.log('app started');
