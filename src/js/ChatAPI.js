@@ -15,25 +15,25 @@ export default class ChatAPI {
   }
 
   /* создание апи запроса */
-  async createRequest(options) {
-    const { method, urlParam, body } = options;
+  // async createRequest(options) {
+  //   const { method, urlParam, body } = options;
 
-    const newUrl = `${this.baseURL}/${urlParam}`;
+  //   const newUrl = `${this.baseURL}/${urlParam}`;
 
-    const response = await fetch(newUrl, {
-      method,
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-      },
-      body,
-    });
+  //   // const response = await fetch(newUrl, {
+  //   //   method,
+  //   //   headers: {
+  //   //     'Content-Type': 'application/json;charset=utf-8',
+  //   //   },
+  //   //   body,
+  //   // });
 
-    const result = await response.json();
+  //   const result = await response.json();
 
-    if (!result) { return false; }
+  //   if (!result) { return false; }
 
-    return result;
-  }
+  //   return result;
+  // }
 
   /*
   *  метод отправляет POST API запрос
