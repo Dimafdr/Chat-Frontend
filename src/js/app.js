@@ -5,7 +5,7 @@ import ChatWS from './ChatWS';
 import ChatAPI from './ChatAPI';
 
 /* домен сервера */
-const domainUrl = 'dimafdr-chat-backend.onrender.com/';
+const domainUrl = 'dimafdr-chat-backend.onrender.com';
 // const domainUrl = 'localhost:7070';
 
 /* элемент блока div в DOM */
