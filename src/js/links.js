@@ -3,7 +3,6 @@
 
 const url = new URL(window.location.href);
 
-let WebSocketProtocol = 'wss'; // Чтобы работало на heroku.
 
 // Параметры для разработки.
 if (url.hostname === 'localhost') {
