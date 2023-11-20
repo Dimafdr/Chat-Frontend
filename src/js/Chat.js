@@ -12,7 +12,7 @@ export default class Chat {
     this.chatInput = this.chatForm.elements.message;
     this.user = null;
     this.ws = null;
-    this.baseURL = 'http://dimafdr-chat-backend2.onrender.com';
+    this.baseURL = 'wss://dimafdr-chat-backend2.onrender.com';
     this.listUsers = document.querySelector('.users__list');
     this.listMessages = document.querySelector('.messages__list');
 
