@@ -170,7 +170,7 @@ export default class Chat {
     if (data.length > 0) {
       this.listMessages.innerHTML = '';
       data.forEach((e) => {
-        this.listMessages.insertAdjacentHTML('beforeend', this.markUpMessage(e.name, e.created, e.message), );
+        this.listMessages.insertAdjacentHTML('beforeend', this.markUpMessage(e.name, e.created, e.message));
       });
     }
   }
