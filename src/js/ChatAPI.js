@@ -1,6 +1,6 @@
 export default class ChatAPI {
   constructor(domainUrl) {
-    this.baseURL = `http://${domainUrl}`; /* url для связи с API */
+    this.baseURL = `http://dimafdr-chat-backend2.onrender.com`; /* url для связи с API */
   }
 
   /* опции для запроса */
