@@ -26,6 +26,7 @@ export default class API extends ErrorHandler {
     this.input.placeholder = 'Подождите, ваш запрос обрабатывается...';
     return fetch(`${this.baseUrl}/users`, {
       body: JSON.stringify(contact),
+      mode: 'no-cors',
       method: 'POST',
       headers: this.contentTypeHeader,
     }).then((response) => {

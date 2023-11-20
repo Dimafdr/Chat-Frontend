@@ -21,7 +21,6 @@ export default class ChatAPI {
     const newUrl = `${this.baseURL}/${urlParam}`;
 
     const response = await fetch(newUrl, {
-      mode: 'no-cors',
       method,
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
