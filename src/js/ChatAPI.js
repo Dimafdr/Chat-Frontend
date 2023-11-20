@@ -1,6 +1,6 @@
 export default class ChatAPI {
   constructor(domainUrl) {
-    this.baseURL = `wss://${domainUrl}`; /* url для связи с API */
+    this.baseURL = `http://${domainUrl}`; /* url для связи с API */
   }
 
   /* опции для запроса */
