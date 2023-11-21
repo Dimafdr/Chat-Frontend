@@ -1,33 +1,10 @@
-/* eslint-disable no-console */
-import ChatDOM from './ChatDOM';
-import ChatControl from './ChatControl';
-import ChatWS from './ChatWS';
-import ChatAPI from './ChatAPI';
+import RenderModal from './RenderModal';
 
-/* домен сервера */
-const domainUrl = 'dimafdr-chat-backend2.onrender.com';
-// const domainUrl = 'localhost:7070';
+import background from '../img/cell.jpg';
 
-/* элемент блока div в DOM */
-const hw = document.querySelector('#hw');
+document.querySelector('body').style.backgroundImage = `url(${background})`;
 
-/*
-*  создание класса отвечающего за DOM
-*  и присвоение ему div элемента
-*/
-const chatDOM = new ChatDOM();
-chatDOM.bindToDOM(hw);
+const container = document.querySelector('.app-container');
+const render = new RenderModal(container);
 
-/*
-*  создание классов отвечающих за вебсокет и за API
-*/
-const chatWS = new ChatWS(domainUrl);
-const chatAPI = new ChatAPI(domainUrl);
-
-/*
-* создание класса отвечающего за контрольт и инициализация класса
-*/
-const chatControl = new ChatControl(chatDOM, chatWS, chatAPI);
-chatControl.init();
-
-console.log('app started');
+render.enterUser();

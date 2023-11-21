@@ -1,273 +1,260 @@
-@font-face {
-  font-family: "OpenSans";
-  font-style: normal;
-  font-weight: 400;
-  src: url("../font/OpenSans-Regular.woff") format("woff");
+html {
+    height: 100%;
 }
 
 body {
-  position: relative;
-  color: #1b1b1b;
-  font-family: "OpenSans";
-  /* background: #c1dcdd; */
-  /* background: #3e5a6d; */
-
-  background: linear-gradient( #999999, transparent 1px), linear-gradient( 90deg, #999999, transparent 1px);
-	background-size: 18px 18px;
-	background-position: center center;
-  background-color: #e2e2e2;
+    position: relative;
+    min-height: 100%;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 16px;
+    line-height: 1.42857143;
+    color: #333;
+    background-color: #fff;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
+p {
+    margin-block-start: 0;
+    margin-block-end: 0;
 }
 
-/* Общие стили для полосы прокрутки */
-/* Ширина и цвет полосы прокрутки */
-::-webkit-scrollbar {
-  width: 10px;
-  /* background-color: #e2e2e2; */
-  background-color: transparent;
-  border-radius: 0 3px 3px 0;
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
 }
 
-/* Стили для "бегунка" полосы прокрутки */
-::-webkit-scrollbar-thumb {
-  background-color: #888;
-  border-radius: 5px;
+li {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 5%;
 }
 
-/* тень от наведения мышкой на полосу прокрутки */
-::-webkit-scrollbar-thumb:hover {
-  background-color: #999999;
+input {
+    width: 100%;
+    height: 30px;
+    margin-bottom: 10px;
+    border-radius: 10px;
 }
 
-#hw {
-  margin: 20px auto;
-  max-width: 500px;
+h1 {
+    font-size: 20px;
+    text-align: center;
+    font-weight: 400;
 }
 
-.header {
+.app-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.modal-container {
+    width: 40%;
+    margin: auto;
+    padding: 20px;
+    overflow: auto;
+    position: fixed;
+    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: 2px solid black;
+}
+
+.modal-form {
   text-align: center;
-  font-weight: 700;
 }
 
-.container, .popup-container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.modal-button {
+    width: 120px;
+    height: 40px;
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    background-color: #93dbe9;
+    border-radius: 5px;
 
-  min-width: 320px;
-  max-width: 700px;
-  margin: 20px auto;
-  /* padding: 0 0 10px 0; */
-
-  border-radius: 3px;
-  box-shadow: 0px 0px 8px 2px #7e7e7e;
-
-  /* background-color: #cacaca; */
-  background-color: #e2e2e2;
-  
-  /* background: linear-gradient( #999999, transparent 1px), linear-gradient( 90deg, #999999, transparent 1px);
-	background-size: 18px 18px;
-	background-position: center center;
-  background-color: #e2e2e2; */
+    border-width: 0;
+    border-style: none;
+    border-image: none;
 }
 
-/* Стили для попапа */
-.popup {
-  display: flex;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.15); /* Полупрозрачный фон */
-  z-index: 9999; /* Очень большой z-index, чтобы попап был поверх всего */
-  backdrop-filter: blur(5px); /* Значение "8px" задает интенсивность размытия */
+.display-none {
+    display: none;
 }
 
-.popup-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* Чтобы попап был по центру экрана */
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 5px;
+.form-error {
+    position: absolute;
+    padding: 5px 10px;
+    width: 200px;
+    background: #fff;
+    box-shadow: 0 5px 20px 0 rgba(0, 0, 0, 0.1);
+    z-index: 999;
 }
 
-.popup-header, .popup-login, .popup-button {
-  box-sizing: border-box;
-  width: 90%;
-  padding: 8px 5px;
-  margin: 18px auto 0;
-
-  font-size: 100%;
-  text-align: center;
-
-  border: 1px solid #999999;
-  border-radius: 5px;
+.chat-container {
+    position: absolute;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    top: 10%;
+    left: 28%;
+    width: 70%;
+    height: 90vh;
+    background-color: #fff;
+    border: 2px solid black;
+    border-radius: 10px;
+    overflow-y: auto;
+    word-wrap: break-word;
 }
 
-.popup-login {
-  box-shadow: inset 0px 0px 4px 1px #7e7e7e;
+.chat-container::-webkit-scrollbar {
+  width: 12px;
 }
-
-.popup-login:focus {
-  outline: 1px solid #999999;
-  box-shadow: 0px 0px 8px 2px #7e7e7e;
+.chat-container::-webkit-scrollbar-track {
+  background: rgb(90, 90, 90); 
+  border-radius: 0 10px 10px 0;
 }
-
-.popup-button {
-  margin-bottom: 18px;
-  box-shadow: 0px 0px 5px 1px #7e7e7e;
-  cursor: pointer;
-}
-
-.popup-button:hover {
-  background-color: #d6d6d6;
-  box-shadow: 0px 0px 8px 2px #7e7e7e;
-}
-
-.popup-button:active {
-  box-shadow: none; /* Убираем тень */
-  position: relative; /* Позволит смещать кнопку на небольшое расстояние */
-  top: 2px; /* Небольшое смещение вниз */
+.chat-container::-webkit-scrollbar-thumb {
+  background-color: rgb(202, 202, 202);
+  border-radius: 20px;
+  border: 3px solid rgb(90, 90, 90); 
 }
 
 .chat {
-  box-sizing: border-box;
-  /* white-space: pre; */
-  height: 400px;
-  width: 94%;
-  margin: 15px auto 0;
-  padding: 15px;
-  /* border: 1px solid red; */
-  border-radius: 3px;
-  background-color: #e2e2e2;
-  box-shadow: inset 0 0 10px #999999; /* Настройте параметры тени здесь */
-  overflow-y: auto;
-  overflow-x: hidden;
+    padding: 2%;
 }
 
-.message-container {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-}
-
-.message-left {
-  align-items: flex-start;
-}
-
-.message-right {
-  align-items: flex-end;
-  text-align: end;
-}
-
-.message {
-  margin-top: 10px;
-  border: 1px solid #999999;
-  border-radius: 10px;
-}
-
-.message-author {
-  padding: 2px 8px;
-  /* border-bottom: 1px solid red; */
-  background-color: #7e7e7e3a;
-  border-radius: 10px 10px 0 0;
-  font-size: 80%;
-}
-
-.message-text {
-  padding: 2px 8px;
-  word-break: break-all;
-}
-
-.chat-control {
-  display: flex;
-  flex-wrap: nowrap;
-  width: 95%;
-  margin-bottom: 15px;
+.message-information {
+    font-size: 10px;
 }
 
 .chat-message {
-  flex-grow: 1;
-  box-sizing: border-box;
-  margin: 10px 0 0 0;
-  padding: 4px;
-  /* width: 80%; */
-  margin: 10px auto 0;
+    width: 97%;
+    margin-left: 1%;
 }
 
-.chat-send {
-  /* width: 20%; */
-  margin: 10px 0 0 0;
-  padding: 3px;
+.you,
+.you-message {
+    color: red;
 }
 
-.close {
-  display: none;
+.right-align {
+    text-align: right;
 }
 
-@keyframes glow {
-  0% {
-  /* border-color: #0062ff; */
-  box-shadow: 0 0 10px rgba(255, 0, 0, 0.3), inset 0 0 5px rgba(255, 0, 0, .2);
-  }	
-  100% {
-  /* border-color: #0062ff; */
-  box-shadow: 0 0 20px rgba(255, 0, 0, .9), inset 0 0 10px rgba(255, 0, 0, .7);
-  }
+.connection-container {
+    position: absolute;
+    top: 5vh;
+    left: 5%;
+    width: 25%;
+    background-color: #fff;
+    border: 2px solid black;
+    border-radius: 10px;
 }
 
-.error-add {
-  animation: glow 500ms ease-out infinite alternate;
+.connection-row {
+    margin: 5px;
 }
 
-.users {
+.connection-prewiew {
+    width: 25px;
+    height: 25px;
+    border: 1px solid black;
+    border-radius: 50%;
+}
+
+.container {
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background-position: top 17px right -112px;
+}
+
+@keyframes ldio-7nr8cpu8w2k {
+  0% { opacity: 1 }
+  100% { opacity: 0 }
+}
+
+.ldio-7nr8cpu8w2k div {
+  left: 47px;
+  top: 24px;
   position: absolute;
-  top: 30px;
-  right: 100%;
-  min-width: 100px;
-  width: auto;
-  max-height: calc(100% - 60px);
-  /* left: 0; */
-  /* bottom: 0; */
-  
-  /* transition: -50px; */
-  /* border: 1px solid red; */
-  border-right: none;
-  background-color: #e2e2e2;
-  border-radius: 5px 0 0 5px;
-  box-shadow: -5px 0px 8px 1px #7e7e7e;
+  animation: ldio-7nr8cpu8w2k linear 1s infinite;
+  background: #93dbe9;
+  width: 6px;
+  height: 12px;
+  border-radius: 3px / 6px;
+  transform-origin: 3px 26px;
 }
 
-.user {
-  margin: 12px 12px 12px 12px;
-  padding: 3px 8px;
-  border: 1px solid #7e7e7e;
-  border-radius: 3px;
+.ldio-7nr8cpu8w2k div:nth-child(1) {
+  transform: rotate(0deg);
+  animation-delay: -0.9166666666666666s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(2) {
+  transform: rotate(30deg);
+  animation-delay: -0.8333333333333334s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(3) {
+  transform: rotate(60deg);
+  animation-delay: -0.75s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(4) {
+  transform: rotate(90deg);
+  animation-delay: -0.6666666666666666s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(5) {
+  transform: rotate(120deg);
+  animation-delay: -0.5833333333333334s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(6) {
+  transform: rotate(150deg);
+  animation-delay: -0.5s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(7) {
+  transform: rotate(180deg);
+  animation-delay: -0.4166666666666667s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(8) {
+  transform: rotate(210deg);
+  animation-delay: -0.3333333333333333s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(9) {
+  transform: rotate(240deg);
+  animation-delay: -0.25s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(10) {
+  transform: rotate(270deg);
+  animation-delay: -0.16666666666666666s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(11) {
+  transform: rotate(300deg);
+  animation-delay: -0.08333333333333333s;
+  background: #93dbe9;
+}.ldio-7nr8cpu8w2k div:nth-child(12) {
+  transform: rotate(330deg);
+  animation-delay: 0s;
+  background: #93dbe9;
 }
 
-.loading {
-  display: flex;
-  margin: auto;
-
-  font-weight: bold;
-  display:inline-block;
-  font-family: monospace;
-  font-size: 30px;
-  clip-path: inset(0 3ch 0 0);
-  animation: l 1s steps(4) infinite;
+.loadingio-spinner-spinner-ugc4sg2wum {
+  width: 100px;
+  height: 100px;
+  display: inline-block;
+  overflow: hidden;
+  background: #ffffff;
 }
-
-@keyframes l {
-  to {
-    clip-path: inset(0 -1ch 0 0)
-  }
+.ldio-7nr8cpu8w2k {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform: translateZ(0) scale(1);
+  backface-visibility: hidden;
+  transform-origin: 0 0; /* see note above */
 }
+.ldio-7nr8cpu8w2k div { box-sizing: content-box; }
+/* generated by https://loading.io/ */

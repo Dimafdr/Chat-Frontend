@@ -3,13 +3,14 @@ const HtmlWebPackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
-  entry: './src/index.js', // входной файл
+  devServer: {
+    port: 8080,
+  },
+  devtool: 'source-map',
   target: 'web',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    assetModuleFilename: '[name][ext][query]', // add this line
-    // publicPath: '/', // эта штука, что бы менять путь
-    clean: true, // для очистки папки dist при новом билде
+    publicPath: '',
   },
   module: {
     rules: [
@@ -35,22 +36,20 @@ module.exports = {
         ],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif|ogg|mp3|wav)$/i,
-        type: 'asset',
-        parser: {
-          dataUrlCondition: {
-            maxSize: 40 * 1024, // 40kb
-          },
-        },
+        test: /\.svg$/,
+        type: 'asset/resource',
       },
       {
-        test: /\.(woff|woff2|eot|ttf|otf)$/i,
-        type: 'asset',
-        parser: {
-          dataUrlCondition: {
-            maxSize: 70 * 1024, // 70kb
-          },
-        },
+        test: /\.(png|jpg|gif)$/i,
+        use: [
+          {
+            loader: 'url-loader',
+            options: {
+              limit: 8192,
+              name: 'assets/[hash].[ext]',
+            }
+          }
+        ]
       },
     ],
   },
@@ -58,7 +57,6 @@ module.exports = {
     new HtmlWebPackPlugin({
       template: './src/index.html',
       filename: './index.html',
-      favicon: './src/img/icon.png',
     }),
     new MiniCssExtractPlugin({
       filename: '[name].css',

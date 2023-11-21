@@ -1,190 +1,216 @@
-/* eslint-disable class-methods-use-this */
-/* eslint-disable no-console */
+import getCreationDate from './getCreationDate';
+
 export default class Chat {
-  constructor(element) {
-    if (typeof element === 'string') {
-      this.popup = document.querySelector(element);
-    }
-    this.popup = element;
-    this.popupForm = document.forms.nickname;
-    this.chatForm = document.forms.chat;
-    this.popupInput = this.popupForm.elements.name;
-    this.chatInput = this.chatForm.elements.message;
-    this.user = null;
-    this.ws = null;
-    this.baseURL = 'wss://dimafdr-chat-backend2.onrender.com';
-    this.listUsers = document.querySelector('.users__list');
-    this.listMessages = document.querySelector('.messages__list');
-
-    this.onMessage = this.onMessage.bind(this);
-    this.onPopupSubmit = this.onPopupSubmit.bind(this);
-    this.onChatSubmit = this.onChatSubmit.bind(this);
+  constructor(container, activeUser) {
+    this.container = container;
+    this.activeUser = activeUser;
   }
 
-  init() {
-    this.popupForm.addEventListener('submit', this.onPopupSubmit);
-    this.chatForm.addEventListener('submit', this.onChatSubmit);
-    this.popupInput.focus();
-  }
+  renderConnectionUser(user) {
+    const connectionContainer = document.querySelector('.connection-container');
 
-  onPopupSubmit(evt) {
-    evt.preventDefault();
-    if (this.popupInput.validity.valid) {
-      this.popupInput.className = 'popup__input';
-      this.popupInput.placeholder = 'Введите псевдоним';
-      this.user = this.popupInput.value;
-      console.log(this.user);
-      this.ws = new WebSocket(this.baseURL);
-      this.ws.binaryType = 'blob';
+    const connectionRow = document.createElement('UL');
+    const liPreview = document.createElement('LI');
+    const connectionPreview = document.createElement('DIV');
+    const liUser = document.createElement('LI');
+    const connectionUser = document.createElement('P');
 
-      this.ws.addEventListener('open', () => {
-        const data = JSON.stringify({ type: 'registration', name: this.user });
-        this.ws.send(data);
-        console.log('connected');
-      });
+    connectionRow.classList.add('connection-row');
+    connectionPreview.classList.add('connection-prewiew');
+    connectionUser.classList.add('connection-user');
 
-      this.ws.addEventListener('close', (e) => {
-        console.log('connection closed', e);
-      });
+    if (user === this.activeUser) {
+      connectionUser.classList.add('you');
+      connectionUser.textContent = `${user} (You)`;
 
-      this.ws.addEventListener('error', (e) => {
-        console.log('error:', e);
-      });
+      window.onbeforeunload = async () => {
+        const query = `subscriptions/${encodeURIComponent(this.activeUser)}`;
 
-      this.ws.addEventListener('message', this.onMessage);
+        fetch(`https://dimafdr-chat-backend.onrender.com/${query}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      };
     } else {
-      this.changePlaceholder('Заполните пожалуйста это поле');
+      connectionUser.textContent = user;
     }
+
+    connectionContainer.appendChild(connectionRow);
+    connectionRow.append(liPreview);
+    liPreview.append(connectionPreview);
+    connectionRow.append(liUser);
+    liUser.append(connectionUser);
   }
 
-  onChatSubmit(evt) {
-    evt.preventDefault();
-    if (this.chatInput.value !== '') {
-      const data = JSON.stringify({
-        type: 'message',
-        content: this.chatInput.value,
-        name: this.user,
+  static removeDisconnectionUser(user) {
+    const connectionUserArray = Array.from(document.querySelectorAll('.connection-user'));
+
+    const removeUser = connectionUserArray.find((item) => item.textContent === user);
+
+    removeUser.closest('.connection-row').remove();
+  }
+
+  async renderChat() {
+    const connectionContainer = document.createElement('DIV');
+
+    const chatContainer = document.createElement('DIV');
+    const chat = document.createElement('DIV');
+    const chatSend = document.createElement('FORM');
+    const chatMessage = document.createElement('INPUT');
+
+    chatContainer.classList.add('chat-container');
+    chat.classList.add('chat');
+    chatSend.classList.add('chat-send');
+    chatMessage.classList.add('chat-message');
+
+    chatMessage.placeholder = 'Type some text';
+
+    this.container.appendChild(chatContainer);
+    chatContainer.append(chat);
+    chatSend.append(chatMessage);
+    chatContainer.append(chatSend);
+
+    connectionContainer.classList.add('connection-container');
+    this.container.appendChild(connectionContainer);
+
+    this.messaging();
+
+    const request = fetch('https://dimafdr-chat-backend.onrender.com/index/', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const result = await request;
+
+    if (!result.ok) {
+      console.error('Ошибка');
+
+      return;
+    }
+
+    const json = await result.json();
+
+    if (json) {
+      json.forEach((item) => {
+        this.renderConnectionUser(item.nickname);
       });
-      this.ws.send(data);
-      this.chatInput.value = '';
-      console.log('Сообщение отправлено');
     }
+
+    this.gettingUsers();
   }
 
-  onMessage(e) {
-    const data = JSON.parse(e.data);
-    if (data.type === 'registration') {
-      if (data.success) {
-        this.popupInput.value = '';
-        this.hidePopup();
-        this.chatInput.focus();
-        this.drawListUsers(data.activeUsers);
-        this.drawListMessages(data.messages);
-      } else if (!data.error) {
-        this.changePlaceholder('Это имя уже занято');
-      } else {
-        this.changePlaceholder('Ошибка сервера');
-        console.log(data.error);
-      }
-    }
-    if (data.type === 'message') {
-      if (data.success) {
-        this.drawListMessages(data.messages);
-      } else {
-        this.showError();
-        console.log(data.error);
-      }
-    }
-    if (data.type === 'update') {
-      if (data.success) {
-        this.drawListUsers(data.activeUsers);
-      } else {
-        this.showError();
-        console.log(data.error);
-      }
-    }
-  }
+  renderMessage(autor, text) {
+    const chat = document.querySelector('.chat');
+    const boxMessage = document.createElement('DIV');
+    const information = document.createElement('SPAN');
+    const message = document.createElement('P');
 
-  showError() {
-    this.listMessages.insertAdjacentHTML('beforeend', `<div class="error">
-       <div class="error__body">
-         <div class="error__content">Ошибка сервера</div>
-       </div>
-     </div>`);
-    setTimeout(() => {
-      this.hideError();
-    }, 3000);
-  }
+    boxMessage.classList.add('message-container');
+    information.classList.add('message-information');
+    message.classList.add('message-text');
 
-  hideError() {
-    document.querySelector('.error').remove();
-  }
+    const dateCreate = getCreationDate();
 
-  markUpUser(name) {
-    let temp;
-    if (name === this.user) {
-      temp = 'mine';
+    if (autor === this.activeUser) {
+      boxMessage.classList.add('right-align');
+      information.classList.add('you-message');
+      information.textContent = `${autor} (You), ${dateCreate}`;
+      message.textContent = text;
     } else {
-      temp = '';
+      information.textContent = `${autor}, ${dateCreate}`;
+      message.textContent = text;
     }
-    return `<li class="users__item ${temp}">
-              <div class="users__avatar"></div>
-              <div class="users__name">${name}</div>
-            </li>`;
+
+    chat.appendChild(boxMessage);
+    boxMessage.append(information);
+    boxMessage.append(message);
   }
 
-  markUpMessage(name, date, message) {
-    let temp;
-    if (name === this.user) {
-      temp = 'mine';
-    } else {
-      temp = '';
-    }
-    return `<li class="messages__item message ${temp}">
-    <div class="message__wrapper">
-      <div class="message__title">
-        <span class="message__name">${name}</span>
-        <span class="message__data">${this.cleanDate(date)}</span>
-      </div>
-      <div class="message__content">
-        ${message}
-      </div>
-    </div>
-  </li>`;
+  gettingUsers() {
+    const eventSource = new EventSource('https://dimafdr-chat-backend.onrender.com/sse');
+
+    eventSource.addEventListener('open', (e) => {
+      console.log(e);
+
+      console.log('sse open');
+    });
+
+    eventSource.addEventListener('error', (e) => {
+      console.log(e);
+
+      console.log('sse error');
+    });
+
+    eventSource.addEventListener('message', (e) => {
+      console.log(e);
+      console.log(e.data);
+      const { nickname, req } = JSON.parse(e.data);
+
+      if (req === 'add') {
+        this.renderConnectionUser(nickname);
+      }
+      if (req === 'remove') {
+        Chat.removeDisconnectionUser(nickname);
+      }
+
+      console.log('sse message');
+    });
   }
 
-  cleanDate(str) {
-    const temp1 = str.split(' ');
-    this.date = [temp1[1], temp1[0].slice(0, -1)].join(' ');
-    return this.date;
-  }
+  messaging() {
+    const ws = new WebSocket('wss://dimafdr-chat-backend.onrender.com/ws');
 
-  changePlaceholder(text) {
-    this.popupInput.className = 'popup__input';
-    this.popupInput.value = '';
-    this.popupInput.placeholder = text;
-    this.popupInput.classList.add('red');
-  }
+    const chatMessage = document.querySelector('.chat-message');
+    const chatSend = document.querySelector('.chat-send');
 
-  drawListMessages(data) {
-    if (data.length > 0) {
-      this.listMessages.innerHTML = '';
-      data.forEach((e) => {
-        this.listMessages.insertAdjacentHTML('beforeend', this.markUpMessage(e.name, e.created, e.message));
+    chatSend.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const message = {};
+
+      message.autor = this.activeUser;
+      message.text = chatMessage.value;
+
+      if (!message) return;
+
+      ws.send(JSON.stringify(message));
+
+      chatMessage.value = '';
+    });
+
+    ws.addEventListener('open', (e) => {
+      console.log(e);
+
+      console.log('ws open');
+    });
+
+    ws.addEventListener('close', (e) => {
+      console.log(e);
+
+      console.log('ws close');
+    });
+
+    ws.addEventListener('error', (e) => {
+      console.log(e);
+
+      console.log('ws error');
+    });
+
+    ws.addEventListener('message', (e) => {
+      const data = JSON.parse(e.data);
+      const { chat: messages } = data;
+
+      messages.forEach((message) => {
+        const { autor } = JSON.parse(message);
+        const { text } = JSON.parse(message);
+
+        this.renderMessage(autor, text);
       });
-    }
-  }
 
-  drawListUsers(activeUsers) {
-    if (activeUsers.length > 0) {
-      this.listUsers.innerHTML = '';
-      activeUsers.forEach((e) => {
-        this.listUsers.insertAdjacentHTML('beforeend', this.markUpUser(e));
-      });
-    }
-  }
-
-  hidePopup() {
-    this.popup.className = 'popup visually_hidden';
+      console.log('ws message');
+    });
   }
 }
