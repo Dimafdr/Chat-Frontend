@@ -26,7 +26,7 @@ export default class Chat {
       window.onbeforeunload = async () => {
         const query = `subscriptions/${encodeURIComponent(this.activeUser)}`;
 
-        fetch(`https://dimafdr-chat-backend2.onrender.com/${query}`, {
+        fetch(`https://chat-backendnew.onrender.com/${query}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ export default class Chat {
 
     this.messaging();
 
-    const request = fetch('https://dimafdr-chat-backend2.onrender.com/index/', {
+    const request = fetch('https://chat-backendnew.onrender.com/index/', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export default class Chat {
   }
 
   gettingUsers() {
-    const eventSource = new EventSource('https://dimafdr-chat-backend2.onrender.com/sse');
+    const eventSource = new EventSource('https://chat-backendnew.onrender.com/sse');
 
     eventSource.addEventListener('open', (e) => {
       console.log(e);
@@ -161,7 +161,7 @@ export default class Chat {
   }
 
   messaging() {
-    const ws = new WebSocket('wss://dimafdr-chat-backend2.onrender.com/ws');
+    const ws = new WebSocket('wss://chat-backendnew.onrender.com/ws');
 
     const chatMessage = document.querySelector('.chat-message');
     const chatSend = document.querySelector('.chat-send');

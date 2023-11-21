@@ -52,7 +52,7 @@ export default class RenderModal {
       let request; let result; let
         json;
 
-      request = fetch('https://dimafdr-chat-backend2.onrender.com/index/', {
+      request = fetch('https://chat-backendnew.onrender.com/index/', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ export default class RenderModal {
 
         const chat = new Chat(this.container, nickname);
 
-        request = fetch('https://dimafdr-chat-backend2.onrender.com/subscriptions/', {
+        request = fetch('https://chat-backendnew.onrender.com/subscriptions/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
